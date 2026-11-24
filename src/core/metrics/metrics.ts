@@ -10,6 +10,7 @@ export interface RunMetrics {
 }
 
 export interface SessionInfo {
+  engine?: string;
   sttDevice: string;
   ttsDevice: string;
   threads?: number;
@@ -44,7 +45,7 @@ export function formatReport(info: SessionInfo, runs: RunMetrics[]): string {
     ...Object.entries(environmentSummary()).map(([k, v]) => `- ${k}: ${v}`),
     `- WASM threads: ${info.threads ?? '?'}`,
     `- STT device: ${info.sttDevice}, load ${fmt(info.sttLoadMs)}`,
-    `- TTS device: ${info.ttsDevice}, load ${fmt(info.ttsLoadMs)}`,
+    `- TTS engine: ${info.engine ?? '?'} on ${info.ttsDevice}, load ${fmt(info.ttsLoadMs)}`,
     `- Downloaded: ${info.downloadedMB.toFixed(0)} MB`,
     `- Runs: ${runs.length}, total p50 ${fmt(percentile(totals, 50))}, p90 ${fmt(percentile(totals, 90))}`,
     '',

@@ -52,6 +52,11 @@ export const createTts = () =>
     new Worker(new URL('./tts.worker.ts', import.meta.url), { type: 'module' }),
   );
 
+export const createPiper = () =>
+  new ModelWorker<{ text: string; voice: string; speed: number }, { parts: number }>(
+    new Worker(new URL('./piper.worker.ts', import.meta.url), { type: 'module' }),
+  );
+
 export async function detectWebGpu(): Promise<boolean> {
   try {
     const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
