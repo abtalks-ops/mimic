@@ -1,6 +1,6 @@
-# ADR-0005: Phase 1 voice spike: Whisper base.en + Kokoro-82M in the browser
+# ADR-0005: Phase 1 voice spike: on-device speech-to-text and voices in the browser
 
-- Status: Proposed (awaiting results from real phones)
+- Status: **Accepted** (2026-11-24): Whisper tiny.en + Piper, both on-device
 - Date: 2026-11-24
 - Deciders: Akshay
 
@@ -76,3 +76,23 @@ The spoken path had ~0.7 s of overhead between releasing the button and speech-t
 
 ### Decision: Piper only (2026-11-24)
 On the phone, Kokoro got stuck on "Thinking…" even with 4 threads, while Piper reached first sound for typed phrases in 0.3 to 0.6 s. The product owner chose to **drop Kokoro** and optimise Piper. Removed: the Kokoro worker, the `kokoro-js` dependency and the engine switch. `phonemizer` is now a direct dependency.
+
+### Round 4: Android phone, Piper only, Whisper tiny vs base (build `ca6cfe3`)
+| STT model | Runs | p50 first sound | p90 first sound | STT time | Verdict |
+|---|---|---|---|---|---|
+| whisper-tiny.en (WebGPU) | 5 spoken, 1 typed | **1.43 s** | **1.88 s** | 0.83 to 1.06 s | ✅ meets ≤2 s |
+| whisper-base.en (WebGPU) | 5 spoken | 1.88 s | 2.05 s | 1.06 to 1.42 s | borderline |
+
+Typed input: 0.5 s. Downloads: ~250 MB in total with tiny. The product owner judged tiny's accuracy "good enough".
+
+## Final decision
+**For the MVP, use Whisper tiny.en (WebGPU, with a WASM fallback) for speech-to-text and Piper medium voices (WASM, 4 threads) for character voices.** Both run entirely on-device, inside a cross-origin-isolated PWA.
+
+Progress on the target phone (Android, 8 cores), time to first sound for spoken phrases: 9.7 s (round 1) → 2.5 to 3.0 s (Piper + threads) → **1.4 s** (raw mic capture + tiny).
+
+### Carried into Phase 2
+- Self-host the model files (PRIVACY.md rule 2); they currently come from huggingface.co.
+- Check the licenses of the Piper `ryan` and `amy` voice datasets, or train or licence original character voices.
+- Replace detune with a proper pitch shifter if the character effect sounds off.
+- Load time (~7 to 11 s per model on first use, then cached) needs a friendly onboarding screen.
+- Test on iPhone Safari (WebGPU/WASM behaviour differs).

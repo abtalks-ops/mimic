@@ -66,7 +66,3 @@ export interface AudioChunk {
   sampleRate: number;
 }
 
-/** Used to pick lighter defaults (e.g. Whisper tiny) on phones. */
-export function isLikelyMobile(): boolean {
-  return /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent);
-}

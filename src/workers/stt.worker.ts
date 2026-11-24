@@ -2,7 +2,7 @@
 import { env, pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
 import { ORT_WASM_PATH, type WorkerEvent, type WorkerRequest } from './protocol';
 
-const DEFAULT_MODEL = 'onnx-community/whisper-base.en';
+const DEFAULT_MODEL = 'onnx-community/whisper-tiny.en';
 env.backends.onnx.wasm!.wasmPaths = ORT_WASM_PATH;
 
 let asr: AutomaticSpeechRecognitionPipeline | undefined;
