@@ -1,3 +1,4 @@
+import type { SpeakPayload } from './piper.worker';
 import type { Device, WorkerEvent, WorkerRequest } from './protocol';
 
 export type ProgressFn = (file: string, loaded: number, total: number) => void;
@@ -48,7 +49,7 @@ export const createStt = () =>
   new ModelWorker<Float32Array, string>(new Worker(new URL('./stt.worker.ts', import.meta.url), { type: 'module' }));
 
 export const createPiper = () =>
-  new ModelWorker<{ text: string; voice: string; speed: number }, { parts: number }>(
+  new ModelWorker<SpeakPayload, { parts: number }>(
     new Worker(new URL('./piper.worker.ts', import.meta.url), { type: 'module' }),
   );
 

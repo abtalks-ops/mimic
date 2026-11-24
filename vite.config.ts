@@ -1,6 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import type { Plugin } from 'vite';
+
+/**
+ * Dev only: ONNX Runtime dynamically imports its .mjs from /ort/ (public dir).
+ * Vite's dev server appends "?import" to that URL and then refuses to serve a
+ * public file as a module, so strip the query and let the static server handle it.
+ */
+const serveOrtInDev = (): Plugin => ({
+  name: 'mimic-serve-ort-in-dev',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      if (req.url && /\/ort\/[^?]+\?import$/.test(req.url)) req.url = req.url.replace(/\?import$/, '');
+      next();
+    });
+  },
+});
 
 // BASE_PATH lets the same build run at / (local, custom domain) or /mimic/ (GitHub Pages).
 const base = process.env.BASE_PATH ?? '/';
@@ -8,6 +25,7 @@ const base = process.env.BASE_PATH ?? '/';
 export default defineConfig({
   base,
   plugins: [
+    serveOrtInDev(),
     react(),
     VitePWA({
       strategies: 'injectManifest',
@@ -33,6 +51,6 @@ export default defineConfig({
     }),
   ],
   worker: { format: 'es' },
-  optimizeDeps: { exclude: ['@huggingface/transformers', 'kokoro-js'] },
+  optimizeDeps: { exclude: ['@huggingface/transformers', 'onnxruntime-web'] },
   test: { environment: 'node', include: ['src/**/*.test.ts'] },
 });

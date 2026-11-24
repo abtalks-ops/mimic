@@ -9,9 +9,10 @@ Mimic's promise: **your voice never leaves your device.** Every contributor must
 3. **No third-party analytics, ads SDKs, crash reporters or fonts loaded from third-party CDNs** unless they run fully on-device and are approved in an ADR.
 4. **Storage:** IndexedDB and Cache Storage only. Raw recordings are deleted once a clip is produced, unless the user saves them.
 5. **User control:** Settings must always offer "Delete everything", which clears IndexedDB, caches and localStorage.
-6. **Retention:** the clip history is capped at 50 items by default, oldest removed first.
-7. **Permissions:** request the microphone only when the user taps record, never at startup.
-8. **Sharing** happens only through an explicit user action (the Web Share API or a file download).
+6. **Imported voices** are stored only in IndexedDB on the device and are removed by "Delete everything".
+7. **Retention:** the clip history is capped at 50 items by default, oldest removed first.
+8. **Permissions:** request the microphone only when the user taps record, never at startup.
+9. **Sharing** happens only through an explicit user action (the Web Share API or a file download).
 
 ## Enforcement
 

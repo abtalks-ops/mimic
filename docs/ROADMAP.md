@@ -13,9 +13,11 @@ Draft plan for review. Each phase ends with a demo and a go/no-go decision.
 - Measure latency, model size and memory; record results in an ADR
 - **Exit:** ≤2 s end-to-end on target devices, or a documented fallback. **Met: 1.4 s p50 for spoken phrases on an Android phone (ADR-0005).**
 
-## Phase 2: PWA MVP (3 to 5 weeks)
+## Phase 2: PWA MVP (in progress)
 - Character picker, record/type, playback, local clip history, share, settings, offline support
-- 2 characters with avatar animation
+- 4 characters with avatar animation ✅ (Max, Stella, Rex, Pixie)
+- Clip history and sharing ✅ · Settings with voice picker, voice import and delete everything ✅ · First-run download screen ✅
+- Self-host model files · legal review of espeak-ng (GPL) · Android-only testing for now (no iPhone available)
 - Unit, e2e and accessibility tests in CI
 - **Exit:** all PRD user stories pass; usability test with 5 people
 

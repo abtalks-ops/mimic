@@ -16,9 +16,17 @@
 4. Celebrity voices only with a **written license** from the person or their estate. This would need its own ADR.
 5. Add a user safeguard: an on-screen note that voices are fictional characters.
 
-## Launch characters (proposed, pending Q1 in the PRD)
+## Launch characters
+
+All four use the built-in LibriTTS-R voice model (CC BY 4.0) with different speakers and FX (ADR-0006).
 
 | ID | Name | Archetype | Visual |
 |---|---|---|---|
-| max-blaze | Max Blaze | Confident action-hero voice, low and punchy | Flat 2D, aviator shades, bold outline |
-| stella-vale | Stella Vale | Glamorous film-star voice, warm and smooth | Flat 2D, wavy hair, red-carpet outfit |
+| max-blaze | Max Blaze | Action-hero swagger | Spiky hair, aviator shades |
+| stella-vale | Stella Vale | Old-Hollywood glamour | Wavy golden hair, beauty mark |
+| rex-rumble | Rex Rumble | Booming announcer | Commentator headset and mic |
+| pixie-pop | Pixie Pop | Bubbly pop star | Pink space buns, star eye |
+
+## User-imported voices
+- Users may import their own Piper voice. Before import they must confirm they own it or have permission, and that they won't impersonate a real person without consent.
+- Imported voices never leave the device and are never bundled or shared by us.
