@@ -16,3 +16,4 @@ public/characters/**/*.onnx
 ios/
 android/
 *.tsbuildinfo
+public/ort/

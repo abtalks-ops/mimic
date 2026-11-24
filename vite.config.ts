@@ -10,7 +10,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
+      injectRegister: false,
       manifest: {
         name: 'Mimic',
         short_name: 'Mimic',
@@ -20,13 +24,12 @@ export default defineConfig({
         display: 'standalone',
         icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
       },
-      workbox: {
-        // Model files are cached by transformers.js in Cache Storage, not precached here.
-        globPatterns: ['**/*.{js,css,html,svg}'],
-        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
-        // The 21 MB ONNX runtime is cached on first use rather than precached on install.
-        runtimeCaching: [{ urlPattern: /\.wasm$/, handler: 'CacheFirst', options: { cacheName: 'mimic-wasm' } }],
+      injectManifest: {
+        // Model files are cached by transformers.js; the 21 MB .wasm runtime is cached on first use (src/sw.ts).
+        globPatterns: ['**/*.{js,mjs,css,html,svg}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
+      devOptions: { enabled: true, type: 'module' },
     }),
   ],
   worker: { format: 'es' },

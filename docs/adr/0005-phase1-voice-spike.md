@@ -25,9 +25,27 @@ Both models run in Web Workers. The test build shows load time, speech-to-text t
 ## Results
 _Fill in from the "Copy results" output on each test device._
 
-| Device | Browser | STT device | Load time | p50 total | p90 total | Verdict |
-|---|---|---|---|---|---|---|
-| | | | | | | |
+### Round 1 (build `cfb54f0`, 2026-11-24)
+| Device | Browser | STT device | TTS device | Threads | p50 total | p90 total | Verdict |
+|---|---|---|---|---|---|---|---|
+| Windows PC, 12 cores, 8 GB | Chrome 158 | WebGPU | WASM | 1 (not isolated) | 8.2 s | 10.6 s | ❌ 4× over target |
+
+Findings:
+- The first voice run per session was ~3× slower (9 to 10.6 s) than later ones (~3 s): one-off kernel compilation.
+- The voice step ran single-threaded because the page wasn't cross-origin isolated.
+- Speech-to-text on WebGPU took 3 to 4.4 s for 3 to 5 words, again inflated by first-use compilation.
+
+### Round 2 changes (Phase 1b)
+1. **Warm-up:** both workers run one dummy inference during "Download voices".
+2. **Cross-origin isolation:** a custom service worker (`src/sw.ts`) adds COOP/COEP headers, so ONNX Runtime runs on up to 4 threads. Verified in headless Chromium: `crossOriginIsolated` is true and a test model runs on 4 threads.
+3. **Same-origin runtime:** the ONNX Runtime files are served from `/ort/` instead of jsDelivr (closer to PRIVACY.md rule 2).
+4. **GPU voices on desktop:** Kokoro uses WebGPU (fp32, ~310 MB) where available on non-mobile devices.
+5. **Streaming:** text is split at sentence ends and commas. The first part plays while the rest generates, and "total" now means time to first sound.
+
+### Round 2 results
+| Device | Browser | STT device | TTS device | Threads | p50 first sound | p90 first sound | Verdict |
+|---|---|---|---|---|---|---|---|
+| | | | | | | | |
 
 ## Decision rule
 - p50 ≤ 2 s on the target devices: accept this stack for the MVP.

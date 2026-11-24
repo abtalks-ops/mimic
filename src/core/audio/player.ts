@@ -1,11 +1,5 @@
 import type { VoiceFx } from '../../features/characters/registry';
 
-export interface PlaybackHandle {
-  /** 0..1 loudness, for driving the avatar's mouth. */
-  level(): number;
-  done: Promise<void>;
-}
-
 let shared: AudioContext | undefined;
 /** Must be called from a user gesture at least once (iOS unlock). */
 export function audioContext(): AudioContext {
@@ -14,41 +8,70 @@ export function audioContext(): AudioContext {
   return shared;
 }
 
-/** Plays PCM through the character's FX chain: detune -> EQ -> analyser -> speakers. */
-export function play(samples: Float32Array, sampleRate: number, fx: VoiceFx): PlaybackHandle {
-  const ctx = audioContext();
-  const buffer = ctx.createBuffer(1, samples.length, sampleRate);
-  buffer.getChannelData(0).set(samples);
+/**
+ * Plays audio chunks back to back through the character's FX chain
+ * (detune -> EQ -> analyser -> speakers) as they arrive from the voice model.
+ */
+export class StreamPlayer {
+  private ctx = audioContext();
+  private input: BiquadFilterNode;
+  private analyser: AnalyserNode;
+  private data: Uint8Array<ArrayBuffer>;
+  private nextStart = 0;
+  private pending = 0;
+  private finished = false;
+  private resolveDone!: () => void;
+  readonly done = new Promise<void>((r) => (this.resolveDone = r));
 
-  const src = ctx.createBufferSource();
-  src.buffer = buffer;
-  src.detune.value = fx.detuneCents;
+  constructor(private fx: VoiceFx) {
+    const low = this.ctx.createBiquadFilter();
+    low.type = 'lowshelf';
+    low.frequency.value = 250;
+    low.gain.value = fx.bassDb;
+    const high = this.ctx.createBiquadFilter();
+    high.type = 'highshelf';
+    high.frequency.value = 3500;
+    high.gain.value = fx.trebleDb;
+    this.analyser = this.ctx.createAnalyser();
+    this.analyser.fftSize = 512;
+    this.data = new Uint8Array(this.analyser.fftSize);
+    low.connect(high).connect(this.analyser).connect(this.ctx.destination);
+    this.input = low;
+  }
 
-  const low = ctx.createBiquadFilter();
-  low.type = 'lowshelf';
-  low.frequency.value = 250;
-  low.gain.value = fx.bassDb;
+  enqueue(samples: Float32Array, sampleRate: number): void {
+    const buffer = this.ctx.createBuffer(1, samples.length, sampleRate);
+    buffer.getChannelData(0).set(samples);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.detune.value = this.fx.detuneCents;
+    src.connect(this.input);
+    const start = Math.max(this.ctx.currentTime + 0.02, this.nextStart);
+    src.start(start);
+    // Detune also changes playback speed: 2^(cents/1200).
+    this.nextStart = start + buffer.duration / 2 ** (this.fx.detuneCents / 1200);
+    this.pending++;
+    src.onended = () => {
+      this.pending--;
+      this.maybeDone();
+    };
+  }
 
-  const high = ctx.createBiquadFilter();
-  high.type = 'highshelf';
-  high.frequency.value = 3500;
-  high.gain.value = fx.trebleDb;
+  /** Call when no more chunks will arrive. */
+  finish(): void {
+    this.finished = true;
+    this.maybeDone();
+  }
 
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 512;
-  const data = new Uint8Array(analyser.fftSize);
+  private maybeDone() {
+    if (this.finished && this.pending === 0) this.resolveDone();
+  }
 
-  src.connect(low).connect(high).connect(analyser).connect(ctx.destination);
-  const done = new Promise<void>((resolve) => (src.onended = () => resolve()));
-  src.start();
-
-  return {
-    done,
-    level() {
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (const v of data) sum += ((v - 128) / 128) ** 2;
-      return Math.min(1, Math.sqrt(sum / data.length) * 4);
-    },
-  };
+  /** 0..1 loudness, for driving the avatar's mouth. */
+  level(): number {
+    this.analyser.getByteTimeDomainData(this.data);
+    let sum = 0;
+    for (const v of this.data) sum += ((v - 128) / 128) ** 2;
+    return Math.min(1, Math.sqrt(sum / this.data.length) * 4);
+  }
 }

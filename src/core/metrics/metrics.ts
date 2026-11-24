@@ -2,8 +2,8 @@ export interface RunMetrics {
   input: 'mic' | 'text';
   character: string;
   transcript: string;
-  audioSeconds: number;
   sttMs?: number;
+  /** Time to generate the whole reply. */
   ttsMs: number;
   /** From end of input (button release / submit) to first sound. */
   totalMs: number;
@@ -12,6 +12,7 @@ export interface RunMetrics {
 export interface SessionInfo {
   sttDevice: string;
   ttsDevice: string;
+  threads?: number;
   sttLoadMs?: number;
   ttsLoadMs?: number;
   downloadedMB: number;
@@ -41,12 +42,13 @@ export function formatReport(info: SessionInfo, runs: RunMetrics[]): string {
   const lines = [
     '## Mimic Phase 1 results',
     ...Object.entries(environmentSummary()).map(([k, v]) => `- ${k}: ${v}`),
+    `- WASM threads: ${info.threads ?? '?'}`,
     `- STT device: ${info.sttDevice}, load ${fmt(info.sttLoadMs)}`,
     `- TTS device: ${info.ttsDevice}, load ${fmt(info.ttsLoadMs)}`,
     `- Downloaded: ${info.downloadedMB.toFixed(0)} MB`,
     `- Runs: ${runs.length}, total p50 ${fmt(percentile(totals, 50))}, p90 ${fmt(percentile(totals, 90))}`,
     '',
-    '| # | input | character | words | STT | TTS | total |',
+    '| # | input | character | words | STT | TTS (all) | first sound |',
     '|---|---|---|---|---|---|---|',
     ...runs.map(
       (r, i) =>
