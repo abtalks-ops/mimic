@@ -1,9 +1,16 @@
 /// <reference lib="webworker" />
 import { env, pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import { MODELS_BASE, SELF_HOSTED } from './models';
 import { ORT_WASM_PATH, type WorkerEvent, type WorkerRequest } from './protocol';
 
 const DEFAULT_MODEL = 'onnx-community/whisper-tiny.en';
 env.backends.onnx.wasm!.wasmPaths = ORT_WASM_PATH;
+if (SELF_HOSTED) {
+  // Load from <base>/models/<model id>/ on our own site; never contact Hugging Face.
+  env.allowRemoteModels = false;
+  env.allowLocalModels = true;
+  env.localModelPath = MODELS_BASE;
+}
 
 let asr: AutomaticSpeechRecognitionPipeline | undefined;
 // transformers.js's overloaded pipeline() type is too large for tsc; narrow it to the one task we use.

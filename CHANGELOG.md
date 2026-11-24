@@ -3,6 +3,9 @@
 All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Models are self-hosted: the deploy copies the exact Whisper and Piper files into the site, so phones no longer contact Hugging Face (ADR-0007).
+
 ### Added (Phase 2)
 - Four original characters: Max Blaze, Stella Vale, Rex Rumble and Pixie Pop, all from one CC BY 4.0 voice model (LibriTTS-R, 904 speakers).
 - Settings → Voices: pick and preview a speaker per character.

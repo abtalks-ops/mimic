@@ -18,3 +18,4 @@ android/
 *.tsbuildinfo
 public/ort/
 tests/fixtures/*.png
+public/models/
