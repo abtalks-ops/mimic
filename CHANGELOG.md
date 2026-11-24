@@ -7,6 +7,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Voice engine switch: Piper (lighter, for phones) alongside Kokoro.
 
 ### Removed
+- Whisper size choice: Whisper tiny.en is now fixed (1.4 s p50 on the target phone, ADR-0005).
 - Kokoro voice engine and the engine switch. Piper is now the only voice engine.
 
 ### Changed

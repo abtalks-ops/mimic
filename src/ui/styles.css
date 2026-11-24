@@ -53,6 +53,3 @@ progress { width: 100%; height: 14px; }
 .fast { color: var(--ok); font-weight: 700; }
 .slow { color: var(--warn); font-weight: 700; }
 footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 16px; }
-.options { border: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
-.options legend { font-weight: 700; margin-bottom: 4px; }
-.options label { display: flex; gap: 8px; align-items: center; }

@@ -17,7 +17,7 @@ Status: proposed baseline. Changes go through a new ADR in [adr/](adr/).
 | Styling | CSS Modules + design tokens | No runtime cost, easy to theme |
 | State | Zustand | Small, simple and testable |
 | PWA | vite-plugin-pwa (Workbox) | Service worker, offline caching, install manifest |
-| STT (on-device) | Whisper tiny/base via transformers.js (WebGPU, WASM fallback) | Runs fully in the browser |
+| STT (on-device) | Whisper tiny.en via transformers.js (WebGPU, WASM fallback) | Runs fully in the browser; ~1 s per phrase on a mid-range phone |
 | TTS (on-device) | Piper (VITS) voices via onnxruntime-web + espeak-ng phonemizer | Fast on phones (0.3 to 0.6 s), custom voices can be trained; Kokoro was tried and dropped (ADR-0005) |
 | Voice character FX | Web Audio API (pitch, formant, EQ) | Adds flavour on top of the base TTS voice |
 | Avatar animation | Rive (or Lottie) with mouth shapes driven by audio amplitude | Light, designer-friendly |

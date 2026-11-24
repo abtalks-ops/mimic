@@ -8,10 +8,10 @@ Draft plan for review. Each phase ends with a demo and a go/no-go decision.
 - Create the GitHub repo, enable branch protection and CI
 - **Exit:** docs approved, repo live, Q1 to Q3 answered
 
-## Phase 1: Technical spike (1 to 2 weeks)
+## Phase 1: Technical spike ✅ done (2026-11-24)
 - Prove on-device speech-to-text and character text-to-speech in the browser on a real mid-range phone
 - Measure latency, model size and memory; record results in an ADR
-- **Exit:** ≤2 s end-to-end on target devices, or a documented fallback
+- **Exit:** ≤2 s end-to-end on target devices, or a documented fallback. **Met: 1.4 s p50 for spoken phrases on an Android phone (ADR-0005).**
 
 ## Phase 2: PWA MVP (3 to 5 weeks)
 - Character picker, record/type, playback, local clip history, share, settings, offline support
