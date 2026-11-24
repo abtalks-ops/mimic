@@ -1,8 +1,7 @@
 /// <reference lib="webworker" />
 /**
- * Piper (VITS) voice engine: a lighter alternative to Kokoro for phones.
- * Runs onnxruntime-web directly; phonemes come from the same espeak-ng
- * phonemizer kokoro-js uses.
+ * Piper (VITS) voice engine. Runs onnxruntime-web directly; phonemes come
+ * from the espeak-ng `phonemizer` package.
  */
 import * as ort from 'onnxruntime-web/webgpu';
 import { phonemize } from 'phonemizer';

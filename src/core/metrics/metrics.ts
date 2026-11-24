@@ -11,6 +11,7 @@ export interface RunMetrics {
 
 export interface SessionInfo {
   engine?: string;
+  sttModel?: string;
   sttDevice: string;
   ttsDevice: string;
   threads?: number;
@@ -44,7 +45,7 @@ export function formatReport(info: SessionInfo, runs: RunMetrics[]): string {
     '## Mimic Phase 1 results',
     ...Object.entries(environmentSummary()).map(([k, v]) => `- ${k}: ${v}`),
     `- WASM threads: ${info.threads ?? '?'}`,
-    `- STT device: ${info.sttDevice}, load ${fmt(info.sttLoadMs)}`,
+    `- STT: ${info.sttModel ?? '?'} on ${info.sttDevice}, load ${fmt(info.sttLoadMs)}`,
     `- TTS engine: ${info.engine ?? '?'} on ${info.ttsDevice}, load ${fmt(info.ttsLoadMs)}`,
     `- Downloaded: ${info.downloadedMB.toFixed(0)} MB`,
     `- Runs: ${runs.length}, total p50 ${fmt(percentile(totals, 50))}, p90 ${fmt(percentile(totals, 90))}`,

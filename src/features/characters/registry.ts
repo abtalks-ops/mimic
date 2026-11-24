@@ -1,7 +1,7 @@
 /**
  * Launch characters. Characters are data, not code (docs/ARCHITECTURE.md §5).
  * Both are ORIGINAL characters; see docs/VOICES-AND-CHARACTERS.md.
- * Base voices come from Kokoro-82M (Apache-2.0); the FX gives each its flavour.
+ * Base voices are Piper voices (rhasspy/piper-voices); the FX gives each its flavour.
  */
 export interface VoiceFx {
   /** Pitch shift in cents. Note: on a plain buffer source this also changes speed slightly. */
@@ -14,8 +14,7 @@ export interface Character {
   id: string;
   displayName: string;
   archetype: string;
-  kokoroVoice: string;
-  /** Piper voice id from rhasspy/piper-voices (lighter engine for phones). */
+  /** Piper voice id from rhasspy/piper-voices. */
   piperVoice: string;
   speed: number;
   fx: VoiceFx;
@@ -27,7 +26,6 @@ export const CHARACTERS: Character[] = [
     id: 'max-blaze',
     displayName: 'Max Blaze',
     archetype: 'Action-hero swagger',
-    kokoroVoice: 'am_fenrir',
     piperVoice: 'en_US-ryan-medium',
     speed: 0.95,
     fx: { detuneCents: -120, bassDb: 6, trebleDb: -2 },
@@ -37,7 +35,6 @@ export const CHARACTERS: Character[] = [
     id: 'stella-vale',
     displayName: 'Stella Vale',
     archetype: 'Old-Hollywood glamour',
-    kokoroVoice: 'af_bella',
     piperVoice: 'en_US-amy-medium',
     speed: 0.92,
     fx: { detuneCents: 0, bassDb: 2, trebleDb: 3 },
@@ -47,4 +44,9 @@ export const CHARACTERS: Character[] = [
 
 export const PIPER_VOICES = CHARACTERS.map((c) => c.piperVoice);
 
-export type VoiceEngine = 'kokoro' | 'piper';
+/** Speech-to-text model sizes. Tiny is ~2-3x faster, slightly less accurate. */
+export const STT_MODELS = {
+  tiny: { id: 'onnx-community/whisper-tiny.en', label: 'Tiny (fastest)', sizeMB: 40 },
+  base: { id: 'onnx-community/whisper-base.en', label: 'Base (more accurate)', sizeMB: 80 },
+} as const;
+export type SttSize = keyof typeof STT_MODELS;

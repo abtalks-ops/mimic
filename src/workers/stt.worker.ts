@@ -2,7 +2,7 @@
 import { env, pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
 import { ORT_WASM_PATH, type WorkerEvent, type WorkerRequest } from './protocol';
 
-const MODEL_ID = 'onnx-community/whisper-base.en';
+const DEFAULT_MODEL = 'onnx-community/whisper-base.en';
 env.backends.onnx.wasm!.wasmPaths = ORT_WASM_PATH;
 
 let asr: AutomaticSpeechRecognitionPipeline | undefined;
@@ -16,7 +16,8 @@ const wasmThreads = () =>
 self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
   try {
     if (data.type === 'load') {
-      asr = await createAsr('automatic-speech-recognition', MODEL_ID, {
+      const modelId = data.model ?? DEFAULT_MODEL;
+      asr = await createAsr('automatic-speech-recognition', modelId, {
         device: data.device,
         dtype: data.device === 'webgpu' ? { encoder_model: 'fp32', decoder_model_merged: 'q4' } : 'q8',
         progress_callback: (p: { status: string; file?: string; loaded?: number; total?: number }) => {
@@ -25,7 +26,7 @@ self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
       });
       // Warm-up: the first inference compiles GPU shaders / WASM kernels. Pay that cost now, not on the user's first phrase.
       await asr(new Float32Array(16000));
-      post({ id: data.id, type: 'ok', result: { model: MODEL_ID, threads: wasmThreads() } });
+      post({ id: data.id, type: 'ok', result: { model: modelId, threads: wasmThreads() } });
     } else {
       if (!asr) throw new Error('Speech model not loaded');
       const out = await asr(data.payload as Float32Array);
