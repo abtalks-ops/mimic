@@ -12,3 +12,4 @@ We record every significant technical decision as a short ADR, using the format 
 | [0003](0003-voice-strategy.md) | Voice strategy: original voices, STT then TTS for the MVP | Proposed |
 | [0004](0004-frontend-stack.md) | React + Vite + TypeScript frontend | Proposed |
 | [0005](0005-phase1-voice-spike.md) | Phase 1 voice spike: Whisper tiny + Piper on-device | Accepted |
+| [0006](0006-voice-model-and-custom-voices.md) | One licensed multi-speaker voice model, plus user-imported voices | Accepted |

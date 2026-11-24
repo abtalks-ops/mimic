@@ -1,4 +1,5 @@
 import type { VoiceFx } from '../../features/characters/registry';
+import { buildEq, detuneRate } from './fx';
 
 let shared: AudioContext | undefined;
 /** Must be called from a user gesture at least once (iOS unlock). */
@@ -14,7 +15,7 @@ export function audioContext(): AudioContext {
  */
 export class StreamPlayer {
   private ctx = audioContext();
-  private input: BiquadFilterNode;
+  private input: AudioNode;
   private analyser: AnalyserNode;
   private data: Uint8Array<ArrayBuffer>;
   private nextStart = 0;
@@ -24,19 +25,11 @@ export class StreamPlayer {
   readonly done = new Promise<void>((r) => (this.resolveDone = r));
 
   constructor(private fx: VoiceFx) {
-    const low = this.ctx.createBiquadFilter();
-    low.type = 'lowshelf';
-    low.frequency.value = 250;
-    low.gain.value = fx.bassDb;
-    const high = this.ctx.createBiquadFilter();
-    high.type = 'highshelf';
-    high.frequency.value = 3500;
-    high.gain.value = fx.trebleDb;
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 512;
     this.data = new Uint8Array(this.analyser.fftSize);
-    low.connect(high).connect(this.analyser).connect(this.ctx.destination);
-    this.input = low;
+    this.analyser.connect(this.ctx.destination);
+    this.input = buildEq(this.ctx, fx, this.analyser);
   }
 
   enqueue(samples: Float32Array, sampleRate: number): void {
@@ -48,8 +41,7 @@ export class StreamPlayer {
     src.connect(this.input);
     const start = Math.max(this.ctx.currentTime + 0.02, this.nextStart);
     src.start(start);
-    // Detune also changes playback speed: 2^(cents/1200).
-    this.nextStart = start + buffer.duration / 2 ** (this.fx.detuneCents / 1200);
+    this.nextStart = start + buffer.duration / detuneRate(this.fx.detuneCents);
     this.pending++;
     src.onended = () => {
       this.pending--;

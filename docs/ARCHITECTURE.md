@@ -15,13 +15,13 @@ Status: proposed baseline. Changes go through a new ADR in [adr/](adr/).
 | Language | TypeScript (strict) | Type safety for a team handoff |
 | UI | React 18 + Vite | Large hiring pool, fast builds |
 | Styling | CSS Modules + design tokens | No runtime cost, easy to theme |
-| State | Zustand | Small, simple and testable |
+| State | Small external stores (`useSyncExternalStore`) | No extra dependency |
 | PWA | vite-plugin-pwa (Workbox) | Service worker, offline caching, install manifest |
 | STT (on-device) | Whisper tiny.en via transformers.js (WebGPU, WASM fallback) | Runs fully in the browser; ~1 s per phrase on a mid-range phone |
-| TTS (on-device) | Piper (VITS) voices via onnxruntime-web + espeak-ng phonemizer | Fast on phones (0.3 to 0.6 s), custom voices can be trained; Kokoro was tried and dropped (ADR-0005) |
+| TTS (on-device) | Piper (VITS) `libritts_r` multi-speaker model (CC BY 4.0) + user-imported Piper voices, via onnxruntime-web + espeak-ng phonemizer (ADR-0006) | Fast on phones (0.3 to 0.6 s), custom voices can be trained; Kokoro was tried and dropped (ADR-0005) |
 | Voice character FX | Web Audio API (pitch, formant, EQ) | Adds flavour on top of the base TTS voice |
 | Avatar animation | Rive (or Lottie) with mouth shapes driven by audio amplitude | Light, designer-friendly |
-| Storage | IndexedDB via Dexie; Cache Storage for models | Large blobs, offline |
+| Storage | IndexedDB via Dexie (clips, imported voices, settings); Cache Storage for models | Large blobs, offline |
 | Testing | Vitest, Testing Library, Playwright, axe-core | Unit, e2e and accessibility |
 | Lint/format | ESLint + Prettier, Husky + lint-staged | Consistent code |
 | Native (later) | Capacitor | Reuses the PWA code as is |

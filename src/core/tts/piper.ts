@@ -6,6 +6,7 @@
  */
 export interface PiperConfig {
   audio: { sample_rate: number };
+  espeak?: { voice?: string };
   phoneme_id_map: Record<string, number[]>;
   inference?: { noise_scale?: number; length_scale?: number; noise_w?: number };
   num_speakers?: number;
@@ -33,3 +34,22 @@ export function joinClauses(clauses: string[], sourceText: string): string {
   const end = sourceText.trim().match(/[.!?,;:]$/)?.[0] ?? '.';
   return clauses.join(', ') + end;
 }
+
+/**
+ * Checks a user-imported Piper `.onnx.json` and explains what is wrong in
+ * plain words. Only espeak-phoneme Piper voices are supported.
+ */
+export function validatePiperConfig(json: unknown): PiperConfig {
+  const c = json as Partial<PiperConfig> & { phoneme_type?: string };
+  if (!c || typeof c !== 'object') throw new Error('The .json file is not a Piper voice config.');
+  if (!c.phoneme_id_map || typeof c.phoneme_id_map !== 'object')
+    throw new Error('The .json file has no "phoneme_id_map", so it is not a Piper voice config.');
+  if (!c.audio || typeof c.audio.sample_rate !== 'number')
+    throw new Error('The .json file has no "audio.sample_rate".');
+  if (c.phoneme_type && c.phoneme_type !== 'espeak')
+    throw new Error(`This voice uses "${c.phoneme_type}" phonemes; only espeak voices are supported.`);
+  return c as PiperConfig;
+}
+
+/** espeak language for a voice, e.g. "en-us". */
+export const voiceLanguage = (c: PiperConfig) => c.espeak?.voice ?? 'en-us';
