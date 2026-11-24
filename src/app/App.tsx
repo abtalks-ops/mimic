@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Recorder } from '../core/audio/recorder';
-import { audioContext, play } from '../core/audio/player';
+import { audioContext, StreamPlayer } from '../core/audio/player';
 import { formatReport, percentile, type RunMetrics, type SessionInfo } from '../core/metrics/metrics';
 import { Avatar } from '../features/characters/Avatar';
 import { CHARACTERS, type Character } from '../features/characters/registry';
-import { createStt, createTts, detectWebGpu } from '../workers/client';
+import { createStt, createTts, detectWebGpu, isLikelyMobile, type AudioChunk } from '../workers/client';
 import type { Device } from '../workers/protocol';
 
 type Phase = 'idle' | 'loading' | 'ready' | 'recording' | 'thinking' | 'speaking' | 'error';
@@ -44,13 +44,14 @@ export function App() {
     try {
       const gpu = !forceWasm && (await detectWebGpu());
       const sttDevice: Device = gpu ? 'webgpu' : 'wasm';
-      // Kokoro on WebGPU needs the 300 MB fp32 model, so phones default to WASM q8.
-      const ttsDevice: Device = 'wasm';
+      // Kokoro on WebGPU needs the 310 MB fp32 model, so phones stay on WASM q8 (~90 MB).
+      const ttsDevice: Device = gpu && !isLikelyMobile() ? 'webgpu' : 'wasm';
       const t0 = performance.now();
-      const sttDone = stt.load(sttDevice).then(() => performance.now() - t0);
+      // Load times include the warm-up run each worker does after loading.
+      const sttDone = stt.load(sttDevice).then((r) => ({ ms: performance.now() - t0, r: r as { threads: number } }));
       const ttsDone = tts.load(ttsDevice).then(() => performance.now() - t0);
-      const [sttLoadMs, ttsLoadMs] = await Promise.all([sttDone, ttsDone]);
-      setInfo({ sttDevice, ttsDevice, sttLoadMs, ttsLoadMs, downloadedMB: 0 });
+      const [sttRes, ttsLoadMs] = await Promise.all([sttDone, ttsDone]);
+      setInfo({ sttDevice, ttsDevice, sttLoadMs: sttRes.ms, ttsLoadMs, threads: sttRes.r.threads, downloadedMB: 0 });
       setPhase('ready');
     } catch (e) {
       fail(e);
@@ -70,22 +71,26 @@ export function App() {
     }
     setCaption(transcript);
     const t = performance.now();
-    const { samples, sampleRate } = await tts.run({ text: transcript, voice: character.kokoroVoice, speed: character.speed });
-    const ttsMs = performance.now() - t;
-    const totalMs = performance.now() - started;
-    setRuns((r) => [
-      ...r,
-      { input, character: character.displayName, transcript, audioSeconds: samples.length / sampleRate, sttMs, ttsMs, totalMs },
-    ]);
-    setPhase('speaking');
-    const handle = play(samples, sampleRate, character.fx);
+    const player = new StreamPlayer(character.fx);
+    let firstSound: number | undefined;
     let raf = 0;
     const tick = () => {
-      setMouth(handle.level());
+      setMouth(player.level());
       raf = requestAnimationFrame(tick);
     };
-    tick();
-    await handle.done;
+    await tts.stream<AudioChunk>({ text: transcript, voice: character.kokoroVoice, speed: character.speed }, (chunk) => {
+      if (firstSound === undefined) {
+        firstSound = performance.now();
+        setPhase('speaking');
+        tick();
+      }
+      player.enqueue(chunk.samples, chunk.sampleRate);
+    });
+    const ttsMs = performance.now() - t;
+    player.finish();
+    const totalMs = (firstSound ?? performance.now()) - started;
+    setRuns((r) => [...r, { input, character: character.displayName, transcript, sttMs, ttsMs, totalMs }]);
+    await player.done;
     cancelAnimationFrame(raf);
     setMouth(0);
     setPhase('ready');
@@ -172,8 +177,8 @@ export function App() {
       {(phase === 'idle' || phase === 'error') && (
         <section className="panel">
           <p>
-            First, download the speech and voice models (about 170 MB, one time only). Use Wi-Fi. Nothing you say is ever
-            uploaded.
+            First, download the speech and voice models (about {isLikelyMobile() ? '170' : '400'} MB, one time only). Use
+            Wi-Fi. Nothing you say is ever uploaded.
           </p>
           <label className="check">
             <input type="checkbox" checked={forceWasm} onChange={(e) => setForceWasm(e.target.checked)} /> Force CPU (WASM)
@@ -189,7 +194,8 @@ export function App() {
       {phase === 'loading' && (
         <section className="panel">
           <p>
-            Loading models… {(loaded / 1e6).toFixed(0)} / {total ? (total / 1e6).toFixed(0) : '?'} MB
+            {total && loaded >= total ? 'Warming up the voices…' : 'Loading models…'} {(loaded / 1e6).toFixed(0)} /{' '}
+            {total ? (total / 1e6).toFixed(0) : '?'} MB
           </p>
           <progress value={loaded} max={total || 1} />
         </section>
@@ -227,10 +233,11 @@ export function App() {
       <section className="panel metrics" aria-label="Test results">
         <h2>Test results</h2>
         <p>
-          Speech model: {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice model: {info.ttsDevice} ({fmt(info.ttsLoadMs)})
+          Speech model: {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice model: {info.ttsDevice} ({fmt(info.ttsLoadMs)}) ·
+          Threads: {info.threads ?? '-'}
         </p>
         <p>
-          Runs: {runs.length} · Total time p50 <b>{fmt(percentile(totals, 50))}</b> · p90 <b>{fmt(percentile(totals, 90))}</b> ·
+          Runs: {runs.length} · Time to first sound p50 <b>{fmt(percentile(totals, 50))}</b> · p90 <b>{fmt(percentile(totals, 90))}</b> ·
           target ≤ 2000 ms
         </p>
         {runs.length > 0 && (
@@ -240,8 +247,8 @@ export function App() {
                 <th>#</th>
                 <th>Input</th>
                 <th>Speech→text</th>
-                <th>Voice</th>
-                <th>Total</th>
+                <th>Voice (all)</th>
+                <th>First sound</th>
               </tr>
             </thead>
             <tbody>

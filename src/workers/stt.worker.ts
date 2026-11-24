@@ -1,12 +1,17 @@
 /// <reference lib="webworker" />
-import { pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
-import type { WorkerEvent, WorkerRequest } from './protocol';
+import { env, pipeline, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import { ORT_WASM_PATH, type WorkerEvent, type WorkerRequest } from './protocol';
 
 const MODEL_ID = 'onnx-community/whisper-base.en';
+env.backends.onnx.wasm!.wasmPaths = ORT_WASM_PATH;
+
 let asr: AutomaticSpeechRecognitionPipeline | undefined;
 // transformers.js's overloaded pipeline() type is too large for tsc; narrow it to the one task we use.
 const createAsr = pipeline as unknown as (task: 'automatic-speech-recognition', model: string, options: object) => Promise<AutomaticSpeechRecognitionPipeline>;
 const post = (e: WorkerEvent) => self.postMessage(e);
+/** ONNX Runtime's default: min(4, cores/2) when cross-origin isolated, else 1. */
+const wasmThreads = () =>
+  self.crossOriginIsolated ? (env.backends.onnx.wasm!.numThreads ?? Math.min(4, Math.ceil((navigator.hardwareConcurrency || 1) / 2))) : 1;
 
 self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
   try {
@@ -18,7 +23,9 @@ self.onmessage = async ({ data }: MessageEvent<WorkerRequest>) => {
           if (p.status === 'progress') post({ type: 'progress', file: `stt/${p.file}`, loaded: p.loaded ?? 0, total: p.total ?? 0 });
         },
       });
-      post({ id: data.id, type: 'ok', result: MODEL_ID });
+      // Warm-up: the first inference compiles GPU shaders / WASM kernels. Pay that cost now, not on the user's first phrase.
+      await asr(new Float32Array(16000));
+      post({ id: data.id, type: 'ok', result: { model: MODEL_ID, threads: wasmThreads() } });
     } else {
       if (!asr) throw new Error('Speech model not loaded');
       const out = await asr(data.payload as Float32Array);
