@@ -35,6 +35,8 @@ npm run build      # production build into dist/
 
 To try it on a phone, use the GitHub Pages build (deployed on every push to `main`), or run `npm run dev -- --host` and open it over HTTPS.
 
+Production builds serve the speech and voice models from the site itself (`/models/`, fetched at deploy time by `scripts/fetch-models.mjs`). Local dev downloads them from Hugging Face. To test self-hosting locally: `node scripts/fetch-models.mjs && VITE_SELF_HOSTED_MODELS=1 npm run build && npm run preview`.
+
 ## Ownership
 
 | Area | Owner |

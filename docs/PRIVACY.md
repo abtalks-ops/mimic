@@ -5,7 +5,7 @@ Mimic's promise: **your voice never leaves your device.** Every contributor must
 ## Rules
 
 1. **No user data over the network.** Audio, transcripts, clips and settings are never sent to any server, including ours.
-2. **Allowed network calls:** static app assets and model files only, fetched from our own origin or CDN. Every new origin must be added to the CSP allowlist and approved in review.
+2. **Allowed network calls:** static app assets and model files only, fetched from our own origin or CDN. Production builds self-host all models under `/models/` (ADR-0007); only local dev builds fetch them from Hugging Face. Every new origin must be added to the CSP allowlist and approved in review.
 3. **No third-party analytics, ads SDKs, crash reporters or fonts loaded from third-party CDNs** unless they run fully on-device and are approved in an ADR.
 4. **Storage:** IndexedDB and Cache Storage only. Raw recordings are deleted once a clip is produced, unless the user saves them.
 5. **User control:** Settings must always offer "Delete everything", which clears IndexedDB, caches and localStorage.

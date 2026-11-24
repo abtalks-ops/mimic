@@ -24,9 +24,21 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Self-host the model files (ADR-0007): copy them from Hugging Face into the site
+      # at build time, so phones never contact Hugging Face.
+      - uses: actions/cache@v4
+        with:
+          path: public/models
+          key: models-${{ hashFiles('scripts/fetch-models.mjs') }}
+      - run: node scripts/fetch-models.mjs public/models
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SELF_HOSTED_MODELS: '1'
+      - name: Check no Hugging Face URLs are used at runtime
+        run: |
+          if grep -rl "huggingface.co/rhasspy" dist/assets; then echo "Piper still points at Hugging Face"; exit 1; fi
+          du -sh dist dist/models
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -11,11 +11,11 @@ import { phonemize } from 'phonemizer';
 import { db, type VoiceChoice } from '../core/storage/db';
 import { joinClauses, phonemesToIds, voiceLanguage, type PiperConfig } from '../core/tts/piper';
 import { BUILTIN_VOICE } from '../features/characters/registry';
+import { PIPER_BASE } from './models';
 import { ORT_WASM_PATH, type WorkerEvent, type WorkerRequest } from './protocol';
 
 ort.env.wasm.wasmPaths = ORT_WASM_PATH;
 
-const BASE = 'https://huggingface.co/rhasspy/piper-voices/resolve/main';
 const CACHE = 'mimic-piper-v2';
 const SPLIT = /(?<=[.!?,;:])\s+/;
 
@@ -36,7 +36,7 @@ export interface SpeakPayload {
 /** e.g. en_US-ryan-medium -> en/en_US/ryan/medium/en_US-ryan-medium */
 function voicePath(id: string): string {
   const [locale, name, quality] = id.split('-');
-  return `${BASE}/${locale.split('_')[0]}/${locale}/${name}/${quality}/${id}`;
+  return `${PIPER_BASE}/${locale.split('_')[0]}/${locale}/${name}/${quality}/${id}`;
 }
 
 /** Fetch with Cache Storage and progress reporting. */

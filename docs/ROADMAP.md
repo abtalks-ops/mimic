@@ -17,7 +17,7 @@ Draft plan for review. Each phase ends with a demo and a go/no-go decision.
 - Character picker, record/type, playback, local clip history, share, settings, offline support
 - 4 characters with avatar animation ✅ (Max, Stella, Rex, Pixie)
 - Clip history and sharing ✅ · Settings with voice picker, voice import and delete everything ✅ · First-run download screen ✅
-- Self-host model files · legal review of espeak-ng (GPL) · Android-only testing for now (no iPhone available)
+- Self-host model files ✅ (ADR-0007) · legal review of espeak-ng (GPL) · Android-only testing for now (no iPhone available)
 - Unit, e2e and accessibility tests in CI
 - **Exit:** all PRD user stories pass; usability test with 5 people
 

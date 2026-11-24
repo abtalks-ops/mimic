@@ -47,8 +47,8 @@ async function handle(req: Request): Promise<Response> {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  // Only same-origin GETs. Model downloads (huggingface.co) are CORS requests and
-  // are cached by transformers.js itself.
+  // Only same-origin GETs. Model files (under /models/, or huggingface.co in dev) are
+  // cached by transformers.js and the Piper worker themselves.
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
   event.respondWith(
     handle(event.request)

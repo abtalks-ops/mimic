@@ -91,7 +91,7 @@ Typed input: 0.5 s. Downloads: ~250 MB in total with tiny. The product owner jud
 Progress on the target phone (Android, 8 cores), time to first sound for spoken phrases: 9.7 s (round 1) → 2.5 to 3.0 s (Piper + threads) → **1.4 s** (raw mic capture + tiny).
 
 ### Carried into Phase 2
-- Self-host the model files (PRIVACY.md rule 2); they currently come from huggingface.co.
+- ~~Self-host the model files (PRIVACY.md rule 2)~~ Done in ADR-0007.
 - Check the licenses of the Piper `ryan` and `amy` voice datasets, or train or licence original character voices.
 - Replace detune with a proper pitch shifter if the character effect sounds off.
 - Load time (~7 to 11 s per model on first use, then cached) needs a friendly onboarding screen.
