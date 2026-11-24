@@ -20,7 +20,7 @@ The product owner also wants 4 personalities, and wants users who own a voice to
 
 ## Decision
 1. **Built-in voices:** `en_US-libritts_r-medium`, a single ~75 MB download. Each character uses a different speaker id (`sid`). An attribution line appears in Settings → Credits.
-2. **Speaker picking:** Settings → Voices lets the user step through all 904 speakers and preview them per character. Choices are stored in IndexedDB. The registry defaults are provisional until the product owner picks final speakers by ear.
+2. **Speaker picking:** Settings → Voices lets the user step through all 904 speakers and preview them per character. Choices are stored in IndexedDB. Defaults picked by ear by the product owner on 2026-11-24: Max Blaze **21**, Stella Vale **60**, Rex Rumble **841**, Pixie Pop **869**.
 3. **Bring your own voice:** users can import a Piper voice (`.onnx` + `.onnx.json`, espeak phonemes only). The config is validated, the user must confirm they have the rights, and the files are stored only in IndexedDB on the device. Imported voices are loaded lazily by the voice worker.
 
 ## Consequences
