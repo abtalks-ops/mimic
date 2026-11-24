@@ -50,3 +50,14 @@ Findings:
 ## Decision rule
 - p50 ≤ 2 s on the target devices: accept this stack for the MVP.
 - Otherwise try, in order: whisper-tiny.en, streaming TTS (play the first sentence early), WebGPU TTS on capable devices, then the browser's built-in speech recognition as an opt-in fallback.
+
+### Round 1b: Android phone (build `cfb54f0`, before the Phase 1b fixes)
+| Device | Browser | STT device | TTS device | Threads | p50 total | p90 total | Verdict |
+|---|---|---|---|---|---|---|---|
+| Android 10 phone, 8 cores, 8 GB | Chrome 156 | WebGPU | WASM | 1 | 9.7 s | 12.8 s | ❌ voice step 7.7 to 9.7 s |
+
+Speech-to-text on the phone's GPU was acceptable once warm (1.3 s). Kokoro on one CPU thread is the bottleneck. Multi-threading is expected to give roughly 2 to 3× but probably not enough for phones.
+
+### Phase 1c: Piper as a lighter engine
+Added a **voice engine switch**. Piper (VITS, ~63 MB per medium voice) runs through onnxruntime-web, with the same espeak-ng phonemizer. It defaults on for phones so both engines can be compared on the same device.
+- Max Blaze: `en_US-ryan-medium`; Stella Vale: `en_US-amy-medium` (from rhasspy/piper-voices). **Check each voice's dataset license before any public release.**

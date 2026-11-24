@@ -3,14 +3,15 @@ import { Recorder } from '../core/audio/recorder';
 import { audioContext, StreamPlayer } from '../core/audio/player';
 import { formatReport, percentile, type RunMetrics, type SessionInfo } from '../core/metrics/metrics';
 import { Avatar } from '../features/characters/Avatar';
-import { CHARACTERS, type Character } from '../features/characters/registry';
-import { createStt, createTts, detectWebGpu, isLikelyMobile, type AudioChunk } from '../workers/client';
+import { CHARACTERS, type Character, type VoiceEngine } from '../features/characters/registry';
+import { createPiper, createStt, createTts, detectWebGpu, isLikelyMobile, type AudioChunk } from '../workers/client';
 import type { Device } from '../workers/protocol';
 
 type Phase = 'idle' | 'loading' | 'ready' | 'recording' | 'thinking' | 'speaking' | 'error';
 
 const stt = createStt();
-const tts = createTts();
+const kokoro = createTts();
+const piper = createPiper();
 
 export function App() {
   const [phase, setPhase] = useState<Phase>('idle');
@@ -21,6 +22,8 @@ export function App() {
   const [mouth, setMouth] = useState(0);
   const [progress, setProgress] = useState<Record<string, { loaded: number; total: number }>>({});
   const [forceWasm, setForceWasm] = useState(false);
+  const [engine, setEngine] = useState<VoiceEngine>(isLikelyMobile() ? 'piper' : 'kokoro');
+  const tts = engine === 'piper' ? piper : kokoro;
   const [info, setInfo] = useState<SessionInfo>({ sttDevice: '-', ttsDevice: '-', downloadedMB: 0 });
   const [runs, setRuns] = useState<RunMetrics[]>([]);
   const [copied, setCopied] = useState(false);
@@ -31,7 +34,8 @@ export function App() {
     const onProgress = (file: string, loaded: number, total: number) =>
       setProgress((p) => ({ ...p, [file]: { loaded, total } }));
     stt.onProgress = onProgress;
-    tts.onProgress = onProgress;
+    kokoro.onProgress = onProgress;
+    piper.onProgress = onProgress;
   }, []);
 
   const loaded = Object.values(progress).reduce((s, f) => s + f.loaded, 0);
@@ -45,13 +49,13 @@ export function App() {
       const gpu = !forceWasm && (await detectWebGpu());
       const sttDevice: Device = gpu ? 'webgpu' : 'wasm';
       // Kokoro on WebGPU needs the 310 MB fp32 model, so phones stay on WASM q8 (~90 MB).
-      const ttsDevice: Device = gpu && !isLikelyMobile() ? 'webgpu' : 'wasm';
+      const ttsDevice: Device = engine === 'kokoro' && gpu && !isLikelyMobile() ? 'webgpu' : 'wasm';
       const t0 = performance.now();
       // Load times include the warm-up run each worker does after loading.
       const sttDone = stt.load(sttDevice).then((r) => ({ ms: performance.now() - t0, r: r as { threads: number } }));
       const ttsDone = tts.load(ttsDevice).then(() => performance.now() - t0);
       const [sttRes, ttsLoadMs] = await Promise.all([sttDone, ttsDone]);
-      setInfo({ sttDevice, ttsDevice, sttLoadMs: sttRes.ms, ttsLoadMs, threads: sttRes.r.threads, downloadedMB: 0 });
+      setInfo({ engine, sttDevice, ttsDevice, sttLoadMs: sttRes.ms, ttsLoadMs, threads: sttRes.r.threads, downloadedMB: 0 });
       setPhase('ready');
     } catch (e) {
       fail(e);
@@ -78,7 +82,7 @@ export function App() {
       setMouth(player.level());
       raf = requestAnimationFrame(tick);
     };
-    await tts.stream<AudioChunk>({ text: transcript, voice: character.kokoroVoice, speed: character.speed }, (chunk) => {
+    await tts.stream<AudioChunk>({ text: transcript, voice: engine === 'piper' ? character.piperVoice : character.kokoroVoice, speed: character.speed }, (chunk) => {
       if (firstSound === undefined) {
         firstSound = performance.now();
         setPhase('speaking');
@@ -177,9 +181,20 @@ export function App() {
       {(phase === 'idle' || phase === 'error') && (
         <section className="panel">
           <p>
-            First, download the speech and voice models (about {isLikelyMobile() ? '170' : '400'} MB, one time only). Use
-            Wi-Fi. Nothing you say is ever uploaded.
+            First, download the speech and voice models (about {downloadEstimateMB(engine)} MB, one time only). Use Wi-Fi.
+            Nothing you say is ever uploaded.
           </p>
+          <fieldset className="engine">
+            <legend>Voice engine</legend>
+            <label>
+              <input type="radio" name="engine" checked={engine === 'kokoro'} onChange={() => setEngine('kokoro')} /> Kokoro
+              (more natural, heavier)
+            </label>
+            <label>
+              <input type="radio" name="engine" checked={engine === 'piper'} onChange={() => setEngine('piper')} /> Piper
+              (lighter, faster on phones)
+            </label>
+          </fieldset>
           <label className="check">
             <input type="checkbox" checked={forceWasm} onChange={(e) => setForceWasm(e.target.checked)} /> Force CPU (WASM)
             instead of GPU
@@ -233,7 +248,7 @@ export function App() {
       <section className="panel metrics" aria-label="Test results">
         <h2>Test results</h2>
         <p>
-          Speech model: {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice model: {info.ttsDevice} ({fmt(info.ttsLoadMs)}) ·
+          Speech model: {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice: {info.engine ?? '-'} on {info.ttsDevice} ({fmt(info.ttsLoadMs)}) ·
           Threads: {info.threads ?? '-'}
         </p>
         <p>
@@ -271,6 +286,12 @@ export function App() {
       <footer>Max Blaze and Stella Vale are original fictional characters.</footer>
     </main>
   );
+}
+
+function downloadEstimateMB(engine: VoiceEngine): number {
+  const stt = 80; // whisper-base.en
+  if (engine === 'piper') return stt + 130; // two medium Piper voices
+  return stt + (isLikelyMobile() ? 90 : 310);
 }
 
 const fmt = (ms?: number) => (ms === undefined || Number.isNaN(ms) ? '-' : `${Math.round(ms)} ms`);
