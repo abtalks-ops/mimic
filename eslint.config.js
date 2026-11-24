@@ -14,4 +14,10 @@ export default tseslint.config(
     rules: { ...reactHooks.configs.recommended.rules },
   },
   { files: ['scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
+  {
+    // Playwright smoke test: CommonJS in Node, with page.evaluate callbacks that run in the browser.
+    files: ['scripts/**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
 );
