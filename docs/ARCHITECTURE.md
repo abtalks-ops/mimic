@@ -18,7 +18,7 @@ Status: proposed baseline. Changes go through a new ADR in [adr/](adr/).
 | State | Zustand | Small, simple and testable |
 | PWA | vite-plugin-pwa (Workbox) | Service worker, offline caching, install manifest |
 | STT (on-device) | Whisper tiny/base via transformers.js (WebGPU, WASM fallback) | Runs fully in the browser |
-| TTS (on-device) | Piper or Kokoro voices via onnxruntime-web | Small and fast, custom voices can be trained |
+| TTS (on-device) | Piper (VITS) voices via onnxruntime-web + espeak-ng phonemizer | Fast on phones (0.3 to 0.6 s), custom voices can be trained; Kokoro was tried and dropped (ADR-0005) |
 | Voice character FX | Web Audio API (pitch, formant, EQ) | Adds flavour on top of the base TTS voice |
 | Avatar animation | Rive (or Lottie) with mouth shapes driven by audio amplitude | Light, designer-friendly |
 | Storage | IndexedDB via Dexie; Cache Storage for models | Large blobs, offline |

@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ### Added
 - Voice engine switch: Piper (lighter, for phones) alongside Kokoro.
 
+### Removed
+- Kokoro voice engine and the engine switch. Piper is now the only voice engine.
+
 ### Changed
 - Faster spoken input: raw AudioWorklet mic capture instead of MediaRecorder, and a Whisper tiny/base choice (tiny by default on phones).
 - Faster voice test build: model warm-up, multi-threaded WASM via a cross-origin-isolating service worker, same-origin ONNX runtime, WebGPU voices on desktop, and streamed playback.

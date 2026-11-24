@@ -73,3 +73,6 @@ The spoken path had ~0.7 s of overhead between releasing the button and speech-t
 - **Raw mic capture:** an AudioWorklet collects PCM directly, so no encode/decode is needed. In headless Chromium with a fake mic, stopping a 1.5 s recording now takes ~5 ms.
 - **Whisper size option:** tiny.en (~40 MB, the default on phones) or base.en (~80 MB, the default on desktop).
 - Expected spoken first sound: ~1.2 to 1.5 s on the same phone.
+
+### Decision: Piper only (2026-11-24)
+On the phone, Kokoro got stuck on "Thinking…" even with 4 threads, while Piper reached first sound for typed phrases in 0.3 to 0.6 s. The product owner chose to **drop Kokoro** and optimise Piper. Removed: the Kokoro worker, the `kokoro-js` dependency and the engine switch. `phonemizer` is now a direct dependency.

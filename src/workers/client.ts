@@ -47,11 +47,6 @@ export class ModelWorker<In, Out> {
 export const createStt = () =>
   new ModelWorker<Float32Array, string>(new Worker(new URL('./stt.worker.ts', import.meta.url), { type: 'module' }));
 
-export const createTts = () =>
-  new ModelWorker<{ text: string; voice: string; speed: number }, { parts: number }>(
-    new Worker(new URL('./tts.worker.ts', import.meta.url), { type: 'module' }),
-  );
-
 export const createPiper = () =>
   new ModelWorker<{ text: string; voice: string; speed: number }, { parts: number }>(
     new Worker(new URL('./piper.worker.ts', import.meta.url), { type: 'module' }),
@@ -71,7 +66,7 @@ export interface AudioChunk {
   sampleRate: number;
 }
 
-/** WebGPU is common on desktops but the fp32 voice model is a 310 MB download, so phones default to WASM. */
+/** Used to pick lighter defaults (e.g. Whisper tiny) on phones. */
 export function isLikelyMobile(): boolean {
   return /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent);
 }
