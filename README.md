@@ -6,7 +6,7 @@ Mimic is a playful "repeat-after-me" voice app. You speak (or type), and a carto
 - **Privacy:** All user data, recordings and settings stay on the user's device. There is no backend and no analytics by default (see [PRIVACY.md](docs/PRIVACY.md)).
 - **Launch scope:** 2 characters, each with its own voice and a flat 2D animated avatar.
 
-> Status: **Pre-development.** The docs below define the product and the technical baseline. No application code exists yet.
+> Status: **Phase 1 (technical spike).** The app is a test build that measures on-device voice speed. See [ADR-0005](docs/adr/0005-phase1-voice-spike.md).
 
 ## Documentation map
 
@@ -23,15 +23,17 @@ Mimic is a playful "repeat-after-me" voice app. You speak (or type), and a carto
 | [SECURITY.md](SECURITY.md) | How to report vulnerabilities |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 
-## Quick start (once code exists)
+## Quick start
 
 ```bash
 nvm use            # Node version pinned in .nvmrc
 npm ci
-npm run dev        # local dev server with HTTPS for mic access
+npm run dev        # local dev server (localhost counts as secure, so the mic works)
 npm test           # unit tests
-npm run e2e        # Playwright end-to-end tests
+npm run build      # production build into dist/
 ```
+
+To try it on a phone, use the GitHub Pages build (deployed on every push to `main`), or run `npm run dev -- --host` and open it over HTTPS.
 
 ## Ownership
 
