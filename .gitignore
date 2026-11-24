@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+# large local model files (download via script instead)
+public/characters/**/*.onnx
+ios/
+android/

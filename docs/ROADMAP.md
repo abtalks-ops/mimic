@@ -1,0 +1,24 @@
+# Roadmap
+
+Draft plan for review. Each phase ends with a demo and a go/no-go decision.
+
+## Phase 0: Foundations (this phase)
+- Product, architecture, privacy and legal docs (this repo)
+- Decide the open questions in [PRD.md §8](PRD.md#8-open-questions-product-owner-to-decide)
+- Create the GitHub repo, enable branch protection and CI
+- **Exit:** docs approved, repo live, Q1 to Q3 answered
+
+## Phase 1: Technical spike (1 to 2 weeks)
+- Prove on-device speech-to-text and character text-to-speech in the browser on a real mid-range phone
+- Measure latency, model size and memory; record results in an ADR
+- **Exit:** ≤2 s end-to-end on target devices, or a documented fallback
+
+## Phase 2: PWA MVP (3 to 5 weeks)
+- Character picker, record/type, playback, local clip history, share, settings, offline support
+- 2 characters with avatar animation
+- Unit, e2e and accessibility tests in CI
+- **Exit:** all PRD user stories pass; usability test with 5 people
+
+## Phase 3: Native apps (2 to 3 weeks)
+- Wrap with Capacitor; native mic and share plugins; app store assets and privacy labels
+- **Exit:** TestFlight and Play internal testing builds approved
