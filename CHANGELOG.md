@@ -13,6 +13,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Bottom navigation, keyboard hold-to-talk (Space), focus styles, a skip link and reduced-motion support.
 
 ### Changed (Phase 2)
+- Default speakers picked by ear: Max 21, Stella 60, Rex 841, Pixie 869.
 - Replaced the ryan/amy voices (non-commercial or unclear licenses) with libritts_r (ADR-0006).
 
 ### Added

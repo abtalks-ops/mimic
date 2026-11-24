@@ -15,7 +15,7 @@ export interface Character {
   id: string;
   displayName: string;
   archetype: string;
-  /** Default LibriTTS-R speaker index (0-903). Provisional until picked by ear in Settings → Voices. */
+  /** Default LibriTTS-R speaker index (0-903), picked by ear by the product owner on 2026-11-24. */
   defaultSpeaker: number;
   speed: number;
   fx: VoiceFx;
@@ -28,7 +28,7 @@ export const CHARACTERS: Character[] = [
     id: 'max-blaze',
     displayName: 'Max Blaze',
     archetype: 'Action-hero swagger',
-    defaultSpeaker: 20,
+    defaultSpeaker: 21,
     speed: 0.95,
     fx: { detuneCents: -120, bassDb: 6, trebleDb: -2 },
     look: 'shades',
@@ -48,7 +48,7 @@ export const CHARACTERS: Character[] = [
     id: 'rex-rumble',
     displayName: 'Rex Rumble',
     archetype: 'Booming announcer',
-    defaultSpeaker: 140,
+    defaultSpeaker: 841,
     speed: 0.9,
     fx: { detuneCents: -200, bassDb: 8, trebleDb: 0 },
     look: 'headset',
@@ -58,7 +58,7 @@ export const CHARACTERS: Character[] = [
     id: 'pixie-pop',
     displayName: 'Pixie Pop',
     archetype: 'Bubbly pop star',
-    defaultSpeaker: 300,
+    defaultSpeaker: 869,
     speed: 1.08,
     fx: { detuneCents: 150, bassDb: -2, trebleDb: 4 },
     look: 'popstar',
