@@ -1,7 +1,7 @@
 // Browser smoke test of the main flows with a fake Piper voice (speech-to-text is skipped).
-// Usage: npm run dev -- --port 5174, then: node scripts/e2e-smoke.cjs <dir with fake-voice.onnx(.json) for screenshots>
+// Usage: npm run dev -- --port 5174, then: node scripts/e2e-smoke.cjs [fixtures dir, also where screenshots go]
 const { chromium, devices } = require('playwright');
-const S = process.argv[2];
+const S = process.argv[2] ?? require('path').join(__dirname, '../tests/fixtures');
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   const ctx = await b.newContext({ ...devices['Pixel 7'] });
