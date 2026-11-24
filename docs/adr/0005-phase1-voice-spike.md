@@ -61,3 +61,15 @@ Speech-to-text on the phone's GPU was acceptable once warm (1.3 s). Kokoro on on
 ### Phase 1c: Piper as a lighter engine
 Added a **voice engine switch**. Piper (VITS, ~63 MB per medium voice) runs through onnxruntime-web, with the same espeak-ng phonemizer. It defaults on for phones so both engines can be compared on the same device.
 - Max Blaze: `en_US-ryan-medium`; Stella Vale: `en_US-amy-medium` (from rhasspy/piper-voices). **Check each voice's dataset license before any public release.**
+
+### Round 3: Android phone, Piper engine (build `105c67e`)
+| Device | Browser | STT | TTS | Threads | Typed: first sound | Spoken: first sound | Verdict |
+|---|---|---|---|---|---|---|---|
+| Android 10 phone, 8 cores, 8 GB | Chrome 156 | whisper-base.en, WebGPU (~1.3 s) | Piper, WASM | 4 (isolated ✅) | 0.3 to 0.6 s | 2.5 to 3.0 s | ✅ typed, ❌ spoken |
+
+The spoken path had ~0.7 s of overhead between releasing the button and speech-to-text starting, from MediaRecorder encoding and then decoding the clip.
+
+### Phase 1d changes
+- **Raw mic capture:** an AudioWorklet collects PCM directly, so no encode/decode is needed. In headless Chromium with a fake mic, stopping a 1.5 s recording now takes ~5 ms.
+- **Whisper size option:** tiny.en (~40 MB, the default on phones) or base.en (~80 MB, the default on desktop).
+- Expected spoken first sound: ~1.2 to 1.5 s on the same phone.

@@ -48,3 +48,10 @@ export const CHARACTERS: Character[] = [
 export const PIPER_VOICES = CHARACTERS.map((c) => c.piperVoice);
 
 export type VoiceEngine = 'kokoro' | 'piper';
+
+/** Speech-to-text model sizes. Tiny is ~2-3x faster, slightly less accurate. */
+export const STT_MODELS = {
+  tiny: { id: 'onnx-community/whisper-tiny.en', label: 'Tiny (fastest)', sizeMB: 40 },
+  base: { id: 'onnx-community/whisper-base.en', label: 'Base (more accurate)', sizeMB: 80 },
+} as const;
+export type SttSize = keyof typeof STT_MODELS;

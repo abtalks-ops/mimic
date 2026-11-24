@@ -1,7 +1,7 @@
 export type Device = 'webgpu' | 'wasm';
 
 export type WorkerRequest =
-  | { id: number; type: 'load'; device: Device }
+  | { id: number; type: 'load'; device: Device; model?: string }
   | { id: number; type: 'run'; payload: unknown };
 
 export type WorkerEvent =

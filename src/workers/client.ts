@@ -32,8 +32,8 @@ export class ModelWorker<In, Out> {
     });
   }
 
-  load(device: Device) {
-    return this.send({ type: 'load', device });
+  load(device: Device, model?: string) {
+    return this.send({ type: 'load', device, model });
   }
   run(payload: In, transfer: Transferable[] = []) {
     return this.send({ type: 'run', payload }, transfer) as Promise<Out>;

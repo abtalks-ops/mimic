@@ -3,7 +3,7 @@ import { Recorder } from '../core/audio/recorder';
 import { audioContext, StreamPlayer } from '../core/audio/player';
 import { formatReport, percentile, type RunMetrics, type SessionInfo } from '../core/metrics/metrics';
 import { Avatar } from '../features/characters/Avatar';
-import { CHARACTERS, type Character, type VoiceEngine } from '../features/characters/registry';
+import { CHARACTERS, STT_MODELS, type Character, type SttSize, type VoiceEngine } from '../features/characters/registry';
 import { createPiper, createStt, createTts, detectWebGpu, isLikelyMobile, type AudioChunk } from '../workers/client';
 import type { Device } from '../workers/protocol';
 
@@ -23,6 +23,7 @@ export function App() {
   const [progress, setProgress] = useState<Record<string, { loaded: number; total: number }>>({});
   const [forceWasm, setForceWasm] = useState(false);
   const [engine, setEngine] = useState<VoiceEngine>(isLikelyMobile() ? 'piper' : 'kokoro');
+  const [sttSize, setSttSize] = useState<SttSize>(isLikelyMobile() ? 'tiny' : 'base');
   const tts = engine === 'piper' ? piper : kokoro;
   const [info, setInfo] = useState<SessionInfo>({ sttDevice: '-', ttsDevice: '-', downloadedMB: 0 });
   const [runs, setRuns] = useState<RunMetrics[]>([]);
@@ -52,10 +53,10 @@ export function App() {
       const ttsDevice: Device = engine === 'kokoro' && gpu && !isLikelyMobile() ? 'webgpu' : 'wasm';
       const t0 = performance.now();
       // Load times include the warm-up run each worker does after loading.
-      const sttDone = stt.load(sttDevice).then((r) => ({ ms: performance.now() - t0, r: r as { threads: number } }));
+      const sttDone = stt.load(sttDevice, STT_MODELS[sttSize].id).then((r) => ({ ms: performance.now() - t0, r: r as { threads: number } }));
       const ttsDone = tts.load(ttsDevice).then(() => performance.now() - t0);
       const [sttRes, ttsLoadMs] = await Promise.all([sttDone, ttsDone]);
-      setInfo({ engine, sttDevice, ttsDevice, sttLoadMs: sttRes.ms, ttsLoadMs, threads: sttRes.r.threads, downloadedMB: 0 });
+      setInfo({ engine, sttModel: sttSize, sttDevice, ttsDevice, sttLoadMs: sttRes.ms, ttsLoadMs, threads: sttRes.r.threads, downloadedMB: 0 });
       setPhase('ready');
     } catch (e) {
       fail(e);
@@ -181,7 +182,7 @@ export function App() {
       {(phase === 'idle' || phase === 'error') && (
         <section className="panel">
           <p>
-            First, download the speech and voice models (about {downloadEstimateMB(engine)} MB, one time only). Use Wi-Fi.
+            First, download the speech and voice models (about {downloadEstimateMB(engine, sttSize)} MB, one time only). Use Wi-Fi.
             Nothing you say is ever uploaded.
           </p>
           <fieldset className="engine">
@@ -194,6 +195,14 @@ export function App() {
               <input type="radio" name="engine" checked={engine === 'piper'} onChange={() => setEngine('piper')} /> Piper
               (lighter, faster on phones)
             </label>
+          </fieldset>
+          <fieldset className="engine">
+            <legend>Speech recognition</legend>
+            {(Object.keys(STT_MODELS) as SttSize[]).map((k) => (
+              <label key={k}>
+                <input type="radio" name="stt" checked={sttSize === k} onChange={() => setSttSize(k)} /> {STT_MODELS[k].label}
+              </label>
+            ))}
           </fieldset>
           <label className="check">
             <input type="checkbox" checked={forceWasm} onChange={(e) => setForceWasm(e.target.checked)} /> Force CPU (WASM)
@@ -248,7 +257,7 @@ export function App() {
       <section className="panel metrics" aria-label="Test results">
         <h2>Test results</h2>
         <p>
-          Speech model: {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice: {info.engine ?? '-'} on {info.ttsDevice} ({fmt(info.ttsLoadMs)}) ·
+          Speech model: {info.sttModel ?? '-'} on {info.sttDevice} ({fmt(info.sttLoadMs)} to load) · Voice: {info.engine ?? '-'} on {info.ttsDevice} ({fmt(info.ttsLoadMs)}) ·
           Threads: {info.threads ?? '-'}
         </p>
         <p>
@@ -288,8 +297,8 @@ export function App() {
   );
 }
 
-function downloadEstimateMB(engine: VoiceEngine): number {
-  const stt = 80; // whisper-base.en
+function downloadEstimateMB(engine: VoiceEngine, sttSize: SttSize): number {
+  const stt = STT_MODELS[sttSize].sizeMB;
   if (engine === 'piper') return stt + 130; // two medium Piper voices
   return stt + (isLikelyMobile() ? 90 : 310);
 }
